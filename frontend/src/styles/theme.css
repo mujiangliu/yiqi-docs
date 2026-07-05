@@ -1,0 +1,28 @@
+/* frontend/src/styles/theme.css */
+:root {
+  --vp-c-brand-1: #3451b2;
+  --vp-c-brand-2: #3a5ccc;
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #f6f6f7;
+  --vp-c-text-1: #213547;
+  --vp-c-text-2: #476582;
+  --vp-c-border: #e2e8f0;
+  --vp-code-bg: #f6f6f7;
+  --vp-sidebar-bg: #ffffff;
+}
+.dark {
+  --vp-c-bg: #1b1b1f;
+  --vp-c-bg-alt: #161618;
+  --vp-c-text-1: #ffffff;
+  --vp-c-text-2: #9090a0;
+  --vp-c-border: #3a3a3a;
+  --vp-code-bg: #161618;
+  --vp-sidebar-bg: #1b1b1f;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+}
+a { color: var(--vp-c-brand-1); }
