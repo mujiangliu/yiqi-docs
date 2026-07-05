@@ -2,7 +2,7 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-Yiqi Docs is a source-available, non-commercial documentation platform for Markdown-based product docs, API references, tutorials, and internal knowledge bases. It ships with a Go backend, a Vue admin console, a public documentation reader, SQLite storage, and a single-binary deployment flow.
+Yiqi Docs is a source-available documentation platform for Markdown-based product docs, API references, tutorials, and internal knowledge bases. It ships with a Go backend, a Vue admin console, a public documentation reader, SQLite storage, and a single-binary deployment flow.
 
 ## Screenshots
 
