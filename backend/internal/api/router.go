@@ -17,6 +17,7 @@ func Router(r *gin.Engine, st *store.Store, issuer *auth.JWTIssuer) {
 		// 公开
 		pub := NewPublicHandler(st)
 		api.GET("/sites/:path", pub.GetSite)
+		api.GET("/sites/:path/pages/*pagePath", pub.GetPage)
 		api.GET("/media/:hash", pub.GetMedia)
 
 		// 鉴权
@@ -41,6 +42,7 @@ func Router(r *gin.Engine, st *store.Store, issuer *auth.JWTIssuer) {
 			pageH := NewAdminPageHandler(st)
 			admin.GET("/sites/:id/pages", pageH.ListBySite)
 			admin.POST("/sites/:id/pages", pageH.Create)
+			admin.GET("/pages/:id", pageH.Get)
 			admin.PUT("/pages/:id", pageH.Update)
 			admin.DELETE("/pages/:id", pageH.Delete)
 			admin.POST("/pages/reorder", pageH.Reorder) // 注意：单独路径避免与 :id 冲突

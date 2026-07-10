@@ -9,7 +9,9 @@
     :current-path="currentPagePath"
     @navigate="onNavigate"
   >
-    <article v-if="currentPage" v-html="renderedHtml"></article>
+    <div v-if="siteStore.pageLoading" class="empty">页面加载中…</div>
+    <div v-else-if="siteStore.pageError" class="error">{{ siteStore.pageError }}</div>
+    <article v-else-if="currentPage" v-html="renderedHtml"></article>
     <div v-else class="empty">请从左侧选择一个页面</div>
 
     <template #toc>
@@ -70,6 +72,12 @@ async function loadSite() {
     await router.replace(`/${sitePath.value}/${siteStore.site.pages[0].path}`)
     return
   }
+  await loadCurrentPage()
+}
+
+async function loadCurrentPage() {
+  if (!currentPagePath.value || !siteStore.site) return
+  await siteStore.loadPage(sitePath.value, currentPagePath.value)
   await nextTick()
   extractToc()
 }
@@ -84,7 +92,7 @@ function onNavigate(path: string) {
 }
 
 watch(currentPagePath, () => {
-  nextTick(extractToc)
+  loadCurrentPage()
 })
 
 watch(renderedHtml, () => {

@@ -29,6 +29,7 @@ type createPageReq struct {
 }
 
 // ListBySite GET /api/admin/sites/:id/pages
+// 仅返回页面树目录字段，不包含 content_md，避免正文过大导致列表页加载失败。
 func (h *AdminPageHandler) ListBySite(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -37,12 +38,29 @@ func (h *AdminPageHandler) ListBySite(c *gin.Context) {
 	}
 	u := auth.CurrentUser(c)
 	s := h.store.ForUser(u)
-	pages, err := s.ListPagesBySite(uint(id))
+	pages, err := s.ListPageTreeBySite(uint(id))
 	if err != nil {
 		Fail(c, err)
 		return
 	}
 	OK(c, pages)
+}
+
+// Get GET /api/admin/pages/:id
+func (h *AdminPageHandler) Get(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		FailMsg(c, http.StatusBadRequest, "invalid id")
+		return
+	}
+	u := auth.CurrentUser(c)
+	s := h.store.ForUser(u)
+	page, err := s.GetPageByID(uint(id))
+	if err != nil {
+		Fail(c, err)
+		return
+	}
+	OK(c, page)
 }
 
 // Create POST /api/admin/sites/:id/pages

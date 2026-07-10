@@ -145,6 +145,14 @@ func TestPageTreeOwnerScoped(t *testing.T) {
 	pages, err := storeA.ListPagesBySite(siteA.ID)
 	assert.NoError(t, err)
 	assert.Len(t, pages, 1)
+	assert.Equal(t, "# A", pages[0].ContentMD)
+
+	// 列表树接口不加载正文
+	tree, err := storeA.ListPageTreeBySite(siteA.ID)
+	assert.NoError(t, err)
+	assert.Len(t, tree, 1)
+	assert.Equal(t, "Intro", tree[0].Title)
+	assert.Empty(t, tree[0].ContentMD)
 	_ = siteB // 避免 unused
 }
 

@@ -22,7 +22,7 @@ func (s *Store) CreatePage(p model.Page) (*model.Page, error) {
 	return &p, nil
 }
 
-// ListPagesBySite 列出站点下所有页面（admin 仅自己站点可见）
+// ListPagesBySite 列出站点下所有页面（含正文，admin 仅自己站点可见）
 func (s *Store) ListPagesBySite(siteID uint) ([]model.Page, error) {
 	_, err := s.GetSiteByID(siteID)
 	if err != nil {
@@ -30,6 +30,21 @@ func (s *Store) ListPagesBySite(siteID uint) ([]model.Page, error) {
 	}
 	var pages []model.Page
 	err = s.db.Where("site_id = ?", siteID).Order("sort asc, id asc").Find(&pages).Error
+	return pages, err
+}
+
+// ListPageTreeBySite 列出站点页面树所需字段，不加载正文。
+func (s *Store) ListPageTreeBySite(siteID uint) ([]model.Page, error) {
+	_, err := s.GetSiteByID(siteID)
+	if err != nil {
+		return nil, err
+	}
+	var pages []model.Page
+	err = s.db.
+		Select("id", "site_id", "parent_id", "slug", "title", "sort", "created_at", "updated_at", "deleted_at").
+		Where("site_id = ?", siteID).
+		Order("sort asc, id asc").
+		Find(&pages).Error
 	return pages, err
 }
 
@@ -90,4 +105,28 @@ func (s *Store) ListPublishedPagesBySite(siteID uint) ([]model.Page, error) {
 	var pages []model.Page
 	err := s.db.Where("site_id = ?", siteID).Order("sort asc, id asc").Find(&pages).Error
 	return pages, err
+}
+
+// ListPublishedPageTreeBySite 公开视角：只列出目录所需字段，不加载正文。
+func (s *Store) ListPublishedPageTreeBySite(siteID uint) ([]model.Page, error) {
+	var pages []model.Page
+	err := s.db.
+		Select("id", "site_id", "parent_id", "slug", "title", "sort", "created_at", "updated_at", "deleted_at").
+		Where("site_id = ?", siteID).
+		Order("sort asc, id asc").
+		Find(&pages).Error
+	return pages, err
+}
+
+// GetPublishedPageByID 公开视角：读取单页正文。
+func (s *Store) GetPublishedPageByID(siteID uint, pageID uint) (*model.Page, error) {
+	var page model.Page
+	err := s.db.Where("site_id = ?", siteID).First(&page, pageID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &page, nil
 }

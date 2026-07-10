@@ -135,6 +135,69 @@ func TestPublicOnlySeesPublished(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 }
 
+func TestPublicSiteLoadsPageContentLazily(t *testing.T) {
+	r, _ := setupTestApp(t)
+	cookieA := loginAs(t, r, "a")
+
+	doWithCookie(t, r, "POST", "/api/admin/sites", map[string]interface{}{
+		"path": "docs", "title": "Docs", "status": "published",
+	}, cookieA)
+
+	w := doWithCookie(t, r, "GET", "/api/admin/sites", nil, cookieA)
+	var sitesResp struct {
+		Data []model.Site `json:"data"`
+	}
+	json.Unmarshal(w.Body.Bytes(), &sitesResp)
+	siteID := sitesResp.Data[0].ID
+
+	doWithCookie(t, r, "POST", "/api/admin/sites/"+itoa(siteID)+"/pages", map[string]interface{}{
+		"slug": "intro", "title": "Intro", "content_md": "# Heavy content",
+	}, cookieA)
+
+	w = doWithCookie(t, r, "GET", "/api/sites/docs", nil, nil)
+	assert.Equal(t, 200, w.Code)
+	assert.NotContains(t, w.Body.String(), "Heavy content")
+
+	w = doWithCookie(t, r, "GET", "/api/sites/docs/pages/intro", nil, nil)
+	assert.Equal(t, 200, w.Code)
+	assert.Contains(t, w.Body.String(), "Heavy content")
+}
+
+func TestAdminPageListExcludesContent(t *testing.T) {
+	r, _ := setupTestApp(t)
+	cookieA := loginAs(t, r, "a")
+
+	doWithCookie(t, r, "POST", "/api/admin/sites", map[string]interface{}{
+		"path": "docs", "title": "Docs", "status": "published",
+	}, cookieA)
+
+	w := doWithCookie(t, r, "GET", "/api/admin/sites", nil, cookieA)
+	var sitesResp struct {
+		Data []model.Site `json:"data"`
+	}
+	json.Unmarshal(w.Body.Bytes(), &sitesResp)
+	siteID := sitesResp.Data[0].ID
+
+	w = doWithCookie(t, r, "POST", "/api/admin/sites/"+itoa(siteID)+"/pages", map[string]interface{}{
+		"slug": "intro", "title": "Intro", "content_md": "# Heavy admin content",
+	}, cookieA)
+	assert.Equal(t, 201, w.Code)
+	var createResp struct {
+		Data model.Page `json:"data"`
+	}
+	json.Unmarshal(w.Body.Bytes(), &createResp)
+	pageID := createResp.Data.ID
+
+	w = doWithCookie(t, r, "GET", "/api/admin/sites/"+itoa(siteID)+"/pages", nil, cookieA)
+	assert.Equal(t, 200, w.Code)
+	assert.NotContains(t, w.Body.String(), "Heavy admin content")
+	assert.Contains(t, w.Body.String(), "Intro")
+
+	w = doWithCookie(t, r, "GET", "/api/admin/pages/"+itoa(pageID), nil, cookieA)
+	assert.Equal(t, 200, w.Code)
+	assert.Contains(t, w.Body.String(), "Heavy admin content")
+}
+
 func TestUserManagement_OnlySuper(t *testing.T) {
 	r, _ := setupTestApp(t)
 	cookieA := loginAs(t, r, "a")

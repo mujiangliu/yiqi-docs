@@ -22,7 +22,7 @@ type pageNode struct {
 	Slug      string `json:"slug"`
 	Title     string `json:"title"`
 	Sort      int    `json:"sort"`
-	ContentMD string `json:"content_md"`
+	ContentMD string `json:"content_md,omitempty"`
 	Path      string `json:"path"`
 }
 
@@ -35,7 +35,7 @@ func (h *PublicHandler) GetSite(c *gin.Context) {
 		Fail(c, err)
 		return
 	}
-	pages, err := pub.ListPublishedPagesBySite(site.ID)
+	pages, err := pub.ListPublishedPageTreeBySite(site.ID)
 	if err != nil {
 		Fail(c, err)
 		return
@@ -47,19 +47,69 @@ func (h *PublicHandler) GetSite(c *gin.Context) {
 	nodes := make([]pageNode, 0, len(pages))
 	for _, p := range pages {
 		nodes = append(nodes, pageNode{
-			ID:        p.ID,
-			ParentID:  p.ParentID,
-			Slug:      p.Slug,
-			Title:     p.Title,
-			Sort:      p.Sort,
-			ContentMD: p.ContentMD,
-			Path:      buildPagePath(p, idToPage),
+			ID:       p.ID,
+			ParentID: p.ParentID,
+			Slug:     p.Slug,
+			Title:    p.Title,
+			Sort:     p.Sort,
+			Path:     buildPagePath(p, idToPage),
 		})
 	}
 	OK(c, gin.H{
 		"title":       site.Title,
 		"description": site.Description,
 		"pages":       nodes,
+	})
+}
+
+// GetPage GET /api/sites/:path/pages/*pagePath
+func (h *PublicHandler) GetPage(c *gin.Context) {
+	path := c.Param("path")
+	pagePath := c.Param("pagePath")
+	if len(pagePath) > 0 && pagePath[0] == '/' {
+		pagePath = pagePath[1:]
+	}
+
+	pub := h.store.Public()
+	site, err := pub.GetPublishedSiteByPath(path)
+	if err != nil {
+		Fail(c, err)
+		return
+	}
+	pages, err := pub.ListPublishedPageTreeBySite(site.ID)
+	if err != nil {
+		Fail(c, err)
+		return
+	}
+	idToPage := map[uint]model.Page{}
+	for _, p := range pages {
+		idToPage[p.ID] = p
+	}
+	var match *model.Page
+	for _, p := range pages {
+		if buildPagePath(p, idToPage) == pagePath {
+			page := p
+			match = &page
+			break
+		}
+	}
+	if match == nil {
+		Fail(c, store.ErrNotFound)
+		return
+	}
+	page, err := pub.GetPublishedPageByID(site.ID, match.ID)
+	if err != nil {
+		Fail(c, err)
+		return
+	}
+	OK(c, pageNode{
+		ID:        page.ID,
+		ParentID:  page.ParentID,
+		Slug:      page.Slug,
+		Title:     page.Title,
+		Sort:      page.Sort,
+		ContentMD: page.ContentMD,
+		Path:      pagePath,
 	})
 }
 

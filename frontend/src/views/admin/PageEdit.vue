@@ -59,10 +59,13 @@ const form = ref({
 
 onMounted(async () => {
   if (isEdit.value) {
-    const resp = await adminPageApi.listBySite(siteId)
-    const page = resp.data.data.find((p) => p.id === Number(pageId.value))
-    if (page) {
-      form.value = { title: page.title, slug: page.slug, content_md: page.content_md, parent_id: page.parent_id }
+    const resp = await adminPageApi.get(Number(pageId.value))
+    const page = resp.data.data
+    form.value = {
+      title: page.title,
+      slug: page.slug,
+      content_md: page.content_md || '',
+      parent_id: page.parent_id,
     }
   }
 })

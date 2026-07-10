@@ -41,6 +41,8 @@ export const authApi = {
 // 公开
 export const publicApi = {
   getSite: (path: string) => api.get<{ data: PublicSite }>(`/sites/${path}`),
+  getPage: (sitePath: string, pagePath: string) =>
+    api.get<{ data: PublicSite['pages'][number] }>(`/sites/${sitePath}/pages/${pagePath}`),
 }
 
 // 站点管理
@@ -63,6 +65,7 @@ export const adminSiteApi = {
 // 页面管理
 export const adminPageApi = {
   listBySite: (siteId: number) => api.get<{ data: Page[] }>(`/admin/sites/${siteId}/pages`),
+  get: (id: number) => api.get<{ data: Page }>(`/admin/pages/${id}`),
   create: (siteId: number, body: { parent_id?: number | null; slug: string; title: string; sort?: number; content_md?: string }) =>
     api.post<{ data: Page }>(`/admin/sites/${siteId}/pages`, body),
   update: (id: number, body: Partial<Pick<Page, 'parent_id' | 'slug' | 'title' | 'sort' | 'content_md'>>) =>

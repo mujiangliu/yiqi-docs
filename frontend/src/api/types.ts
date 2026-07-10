@@ -27,7 +27,7 @@ export interface Page {
   slug: string
   title: string
   sort: number
-  content_md: string
+  content_md?: string
   created_at?: string
   updated_at?: string
 }
@@ -39,7 +39,7 @@ export interface PublicPage {
   slug: string
   title: string
   sort: number
-  content_md: string
+  content_md?: string
   path: string
 }
 
